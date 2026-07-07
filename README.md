@@ -56,7 +56,11 @@ SISTEMA DE GESTIÓN DE PACIENTES/
 ├── utils/                 # Utilidades (Logger, Manejador de CSV)
 ├── main.py                # Punto de entrada de la aplicación
 ├── requirements.txt       # Dependencias
-└── test_patient_management.py # Pruebas del sistema
+├── test_patient_management.py # Pruebas del sistema
+│
+├── logs/                  # [Ignorado en Git] Archivos de registro generados al ejecutar
+├── .vscode/               # [Ignorado en Git] Configuraciones locales del editor
+└── __pycache__/           # [Ignorado en Git] Archivos temporales de Python
 ```
 
 ### Gestión de Pacientes
