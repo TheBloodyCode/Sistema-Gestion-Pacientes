@@ -1,8 +1,63 @@
-# 🏥 Sistema de Gestión de Pacientes para Consultorio Médico 
+# Sistema de Gestión de Pacientes
 
-Sistema completo y profesional de gestión de pacientes que implementa triaje de emergencias, gestión de especialidades médicas, y programación de citas. Utiliza Python con estructuras de datos personalizadas (listas enlazadas, pilas, colas y colas de prioridades).
+Proyecto desarrollado en Python para administrar pacientes, citas médicas y procesos de triaje utilizando estructuras de datos personalizadas desde cero.
 
-##  Características Principales
+Este sistema está diseñado aplicando principios de Programación Orientada a Objetos (POO) y haciendo uso eficiente de las estructuras de datos clásicas para optimizar la gestión de turnos, el almacenamiento y la recuperación de información.
+
+## Características Principales
+
+*   **Gestión de Pacientes**: Registro, búsqueda y administración del historial de pacientes.
+*   **Manejo de Citas Médicas**: Asignación y control de citas utilizando colas.
+*   **Sistema de Triaje**: Asignación de prioridad a pacientes mediante Colas de Prioridad (Priority Queues), garantizando que las urgencias sean atendidas primero.
+*   **Gestión de Especialidades**: Manejo de las diferentes ramas médicas del centro.
+*   **Persistencia de Datos**: Almacenamiento seguro mediante archivos CSV (`manejador_csv.py`), permitiendo que la información perdure entre diferentes ejecuciones.
+*   **Registro de Actividades (Logs)**: Trazabilidad del sistema con el uso de un módulo logger personalizado.
+
+## Estructuras de Datos Implementadas
+
+El sistema implementa sus propias estructuras de datos (sin depender de colecciones avanzadas por defecto) para un mayor control y entendimiento de las estructuras subyacentes:
+
+- **Listas Enlazadas (`lista_enlazada.py`)**: Para el manejo dinámico de colecciones de datos.
+- **Pilas (`pila.py`)**: Útiles para historiales o deshacer/rehacer acciones.
+- **Colas (`cola.py`)**: Para el manejo de pacientes en orden de llegada.
+- **Colas de Prioridad (`cola_prioridad.py`)**: Esencial para el sistema de triaje donde la urgencia dicta el orden de atención.
+
+## Tecnologías y Requisitos
+
+- Python 3.12+
+- Módulos estándar de Python (`csv`, `logging`, `datetime`, etc.)
+
+## Instalación y Ejecución
+
+1. Clonar el repositorio:
+   ```bash
+   git clone https://github.com/TheBloodyCode/Sistema-Gestion-Pacientes.git
+   cd Sistema-Gestion-Pacientes
+   ```
+
+2. Ejecutar la aplicación principal:
+   ```bash
+   python main.py
+   ```
+
+3. O ejecutar las pruebas unitarias:
+   ```bash
+   python test_patient_management.py
+   ```
+
+## Estructura del Proyecto
+
+```
+SISTEMA DE GESTIÓN DE PACIENTES/
+├── data/                  # Archivos CSV para persistencia (citas.csv, patients.csv)
+├── data_structures/       # Implementación de las ED (Colas, Pilas, Listas enlazadas)
+├── models/                # Modelos de datos (Cita Médica, Especialidad, Paciente)
+├── services/              # Lógica de negocio (Gestor de Pacientes, Triaje, Especialidades)
+├── utils/                 # Utilidades (Logger, Manejador de CSV)
+├── main.py                # Punto de entrada de la aplicación
+├── requirements.txt       # Dependencias
+└── test_patient_management.py # Pruebas del sistema
+```
 
 ### Gestión de Pacientes
 -  **Registro de Pacientes**: Añade, busca y elimina pacientes con información completa
