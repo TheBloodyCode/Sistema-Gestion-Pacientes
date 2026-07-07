@@ -519,55 +519,32 @@ Este proyecto está disponible para uso educativo y comercial.
 
 Desarrollado como sistema de gestión hospitalaria avanzado con todas las funcionalidades comentadas en español.
 
-### `utils/logger.py`
-Configura y proporciona un logger para toda la aplicación:
-- **`setup_logger(...)`**: Configura el logger para escribir en archivos y consola.
-- **`logger`**: Instancia preconfigurada del logger para usar en el proyecto.
-
-### `services/patient_manager.py`
-Contiene la lógica de negocio principal para gestionar pacientes:
-- **`__init__(self, patients_filename="patients.csv", history_filename="history.csv")`**: Inicializa el `PatientManager`, las estructuras de datos y carga los pacientes existentes.
-- **`load_patients(self)`**: Carga los datos de pacientes desde el CSV a la `LinkedList`.
-- **`save_patients(self)`**: Guarda los datos de pacientes de la `LinkedList` al CSV.
-- **`add_patient(self, name, age, gender)`**: Crea y añade un nuevo paciente al sistema y a la cola de espera.
-- **`get_patient(self, patient_id_or_name)`**: Busca un paciente por ID o nombre.
-- **`remove_patient(self, patient_id)`**: Elimina un paciente del sistema.
-- **`get_next_patient_in_queue(self)`**: Obtiene el siguiente paciente de la sala de espera.
-- **`add_medical_record(self, patient_id, record)`**: Añade un registro al historial médico de un paciente.
-- **`get_medical_history(self, patient_id)`**: Retorna el historial médico de un paciente.
-- **`list_all_patients(self)`**: Retorna una lista de todos los pacientes activos.
-- **`sort_patients_by_age(self)`**: Ordena y retorna los pacientes por edad.
-- **`sort_patients_by_name(self)`**: Ordena y retorna los pacientes por nombre.
-
-### `main.py`
-Es el punto de entrada de la aplicación:
-- **`display_menu()`**: Muestra las opciones disponibles al usuario.
-- **`get_valid_age()`**: Solicita y valida la edad del usuario.
-- **`main()`**: La función principal que ejecuta el bucle de la aplicación, maneja la entrada del usuario y llama a las funciones del `PatientManager`.
-
 ##  Diagrama de Arquitectura
 
 ```mermaid
 flowchart TD
-    A[main.py - CLI] --> B[PatientManager]
-    B --> C[LinkedList - Pacientes Activos]
-    B --> D[Queue - Sala de Espera]
-    B --> E[Stack - Historial Médico]
-    B --> F[CSVHandler]
-    F --> G[data/patients.csv]
-    H[utils/logger.py] -.-> A
-    H -.-> B
-    H -.-> F
-    C -.-> I[models/patient.py - Objetos Patient]
+    A[main.py - CLI] --> B[GestorPacientes]
+    B --> C[ListaEnlazada - Pacientes Activos]
+    B --> D[Colas - Salas de Espera]
+    B --> E[ColaPrioridad - Emergencias]
+    B --> F[GestorEspecialidades]
+    B --> G[GestorTriaje]
+    B --> H[ManejadorCSV]
+    H --> I[data/patients.csv]
+    H --> J[data/citas.csv]
+    K[utils/logger.py] -.-> A
+    K -.-> B
+    K -.-> F
+    K -.-> G
+    C -.-> L[models/paciente.py]
 ```
 
 ##  Consideraciones Adicionales
 
-*   **Persistencia:** Los datos de los pacientes se guardan automáticamente en el archivo `data/patients.csv` cada vez que se realiza una modificación (añadir, eliminar, actualizar historial).
-*   **Historial Médico:** El historial médico se almacena como una lista dentro del objeto `Patient`.
-*   **Ordenamiento:** Las funciones de ordenamiento (`sort_patients_by_age`, `sort_patients_by_name`) convierten la lista enlazada a una lista de Python para realizar el ordenamiento.
+*   **Persistencia:** Los datos se guardan automáticamente en la carpeta `data/` cada vez que se realiza una modificación (añadir, eliminar, agendar cita).
+*   **Historial Médico:** El historial médico se almacena como una pila (Stack) asociada a cada paciente.
 *   **Logs:** Todos los eventos importantes se registran en la consola y en archivos de log dentro de la carpeta `logs/`.
-*   **Seguridad:** Se usa `ast.literal_eval()` en lugar de `eval()` para deserializar datos del CSV, evitando riesgos de seguridad.
+*   **Seguridad:** Se usa `ast.literal_eval()` para deserializar listas desde CSV, evitando riesgos de seguridad.
 
 ##  Próximas Mejoras (Opcionales)
 
@@ -575,6 +552,5 @@ flowchart TD
 - [ ] Añadir autenticación de usuarios.
 - [ ] Usar una base de datos (SQLite, PostgreSQL) en lugar de CSV.
 - [ ] Generar reportes en PDF.
-- [ ] Implementar una pila dedicada para el historial médico de cada paciente.
 
-Este proyecto proporciona una base sólida para un sistema de gestión de pacientes, demostrando el uso práctico de estructuras de datos fundamentales en un contexto real!
+Este proyecto proporciona una base sólida para un sistema de gestión de pacientes, demostrando el uso práctico de estructuras de datos fundamentales en un contexto real.
