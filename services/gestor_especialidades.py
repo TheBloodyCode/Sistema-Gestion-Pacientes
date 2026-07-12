@@ -150,7 +150,18 @@ class GestorEspecialidades:
             if not self.verificar_disponibilidad(especialidad, fecha, hora):
                 return None, " Horario no disponible para esta especialidad"
             
-            # Paso 2: Crear el objeto CitaMedica
+            # Paso 2: Verificar citas anteriores para reprogramar
+            # Si el paciente ya tiene una cita para esta MISMA especialidad que no esté cancelada,
+            # la cancelamos automáticamente para que esta nueva cita cuente como una "reprogramación".
+            citas_previas = self.obtener_citas_paciente(patient_id)
+            reprogramada = False
+            for cita_previa in citas_previas:
+                if cita_previa.specialty == especialidad and cita_previa.status != "Cancelada":
+                    cita_previa.status = "Cancelada"
+                    reprogramada = True
+                    logger.info(f"Cita anterior {cita_previa.id} cancelada automáticamente (Reprogramación)")
+            
+            # Paso 3: Crear el objeto CitaMedica
             cita = CitaMedica(
                 patient_id=patient_id,
                 specialty=especialidad,
@@ -161,17 +172,18 @@ class GestorEspecialidades:
                 priority=prioridad
             )
             
-            # Paso 3: Añadir la cita a la lista
+            # Paso 4: Añadir la cita a la lista
             self.citas.append(cita)
             
-            # Paso 4: Guardar las citas en el archivo CSV
+            # Paso 5: Guardar las citas en el archivo CSV
             self.guardar_citas()
             
-            # Paso 5: Registrar en logs
+            # Paso 6: Registrar en logs
             logger.info(f"Cita programada: {cita.id} para paciente {patient_id}")
             
-            # Paso 6: Retornar la cita y un mensaje de éxito
-            return cita, " Cita programada exitosamente"
+            # Paso 7: Retornar la cita y un mensaje de éxito
+            mensaje = " Cita reprogramada exitosamente" if reprogramada else " Cita programada exitosamente"
+            return cita, mensaje
             
         except Exception as e:
             # Si ocurre error, lo registramos

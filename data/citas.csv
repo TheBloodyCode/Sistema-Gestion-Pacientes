@@ -1,2 +1,0 @@
-id,patient_id,specialty,appointment_type,date,time,dia_atencion,notes,priority,status,created_at
-a8b4c37f,0940974553,Medicina General,Chequeo Preventivo,2026-07-12,09:30,Domingo,,3,Programada,2026-07-11T22:03:11.414255
