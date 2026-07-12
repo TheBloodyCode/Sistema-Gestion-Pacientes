@@ -74,8 +74,11 @@ class ListaEnlazada:
         
         # Paso 2: Recorremos toda la lista
         while current:
-            # Verificamos si la clave coincide con el ID o el nombre del paciente
-            if current.data.id == key or current.data.name == key:
+            # Verificamos si la clave coincide con el ID, el nombre o el apellido del paciente
+            nombre_completo = f"{current.data.name} {current.data.apellido}".strip().lower()
+            key_lower = key.lower()
+            
+            if current.data.id == key or current.data.name.lower() == key_lower or current.data.apellido.lower() == key_lower or key_lower in nombre_completo:
                 # Si encontramos una coincidencia, devolvemos los datos del paciente
                 return current.data
             # Si no, avanzamos al siguiente nodo

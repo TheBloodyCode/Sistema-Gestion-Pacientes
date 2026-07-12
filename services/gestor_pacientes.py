@@ -99,17 +99,25 @@ class GestorPacientes:
             # Si ocurre un error al guardar, lo registramos
             logger.error(f"Error al guardar pacientes: {e}")
 
-    def add_patient(self, patient_id, name, age, gender):
+    def add_patient(self, patient_id, name, apellido, age, gender):
         
         try:
             # Primero verificamos si ya existe un paciente con ese ID
             existing_patient = self.patient_list.search(patient_id)
             if existing_patient:
-                logger.warning(f"Intento de añadir paciente con ID duplicado: {patient_id}")
-                return None
+                logger.info(f"Paciente con ID {patient_id} ya existe. Actualizando datos básicos...")
+                existing_patient.name = name
+                existing_patient.apellido = apellido
+                existing_patient.age = age
+                existing_patient.gender = gender
+                existing_patient.condicion_actual = "Consulta General"
+                existing_patient.sintomas_actuales = []
+                self.waiting_queue.enqueue(existing_patient)
+                self.save_patients()
+                return existing_patient
             
             # Paso 1: Creamos un nuevo paciente con los datos proporcionados
-            patient = Paciente(patient_id, name, age, gender)
+            patient = Paciente(patient_id, name, apellido, age, gender, condicion_actual="Consulta General", sintomas_actuales=[])
             # Paso 2: Añadimos el paciente a la lista enlazada de pacientes activos
             self.patient_list.append(patient)
             # Paso 3: Añadimos el paciente a la cola de sala de espera
@@ -256,10 +264,10 @@ class GestorPacientes:
         try:
             # Convertimos la lista enlazada a una lista de Python
             patients = self.patient_list.to_list()
-            # Ordenamos la lista usando el nombre como clave
-            patients.sort(key=lambda p: p.name)
+            # Ordenamos la lista usando el apellido y luego el nombre como clave
+            patients.sort(key=lambda p: (p.apellido.lower(), p.name.lower()))
             # Registramos la acción en los logs
-            logger.debug("Ordenando pacientes por nombre")
+            logger.debug("Ordenando pacientes alfabéticamente por apellido y nombre")
             # Devolvemos la lista ordenada
             return patients
         except Exception as e:
@@ -269,21 +277,33 @@ class GestorPacientes:
     
     # ==================== NUEVAS FUNCIONES PARA EMERGENCIAS Y ESPECIALIDADES ====================
     
-    def registrar_paciente_con_emergencia(self, name, age, gender, sintomas, signos_vitales=None):
+    def registrar_paciente_con_emergencia(self, patient_id, name, apellido, age, gender, sintomas, signos_vitales=None):
         
         try:
-            # Paso 1: Generar un ID único para el nuevo paciente
-            # Usamos un contador basado en el número de pacientes + 1
-            patient_id = f"EMRG_{len(self.patient_list.to_list()) + 1:05d}"
+            # Paso 1: Buscar si el paciente ya existe
+            paciente = self.patient_list.search(patient_id)
+            is_new = False
             
-            # Paso 2: Crear el paciente
-            paciente = Paciente(patient_id, name, age, gender)
-            
-            # Paso 3: Añadirlo a la lista enlazada
-            self.patient_list.append(paciente)
+            if not paciente:
+                is_new = True
+                # Paso 2: Crear el paciente si no existe
+                paciente = Paciente(patient_id, name, apellido, age, gender)
+                # Paso 3: Añadirlo a la lista enlazada
+                self.patient_list.append(paciente)
+            else:
+                # Actualizar datos si es necesario
+                paciente.name = name
+                paciente.apellido = apellido
+                paciente.age = age
+                paciente.gender = gender
             
             # Paso 4: Evaluar el nivel de urgencia
             prioridad = self.gestor_triaje.evaluar_urgencia(paciente, sintomas, signos_vitales)
+            
+            # Guardamos la condición y síntomas
+            paciente.condicion_actual = f"Emergencia (Prioridad {prioridad})"
+            paciente.sintomas_actuales = sintomas
+            paciente.enfermedad_principal = f"Emergencia: {sintomas[0] if sintomas else 'Múltiples'}"
             
             # Paso 5: Si es urgente (prioridad >= 3), añadirlo a emergencias
             if prioridad >= 3:
@@ -294,7 +314,10 @@ class GestorPacientes:
                 self.waiting_queue.enqueue(paciente)
             
             # Paso 6: Guardar cambios
-            self.csv_handler.append_data(paciente.to_dict())
+            if is_new:
+                self.csv_handler.append_data(paciente.to_dict())
+            else:
+                self.save_patients()
             
             # Paso 7: Obtener descripción del triaje
             descripcion = self.gestor_triaje.obtener_descripcion_triaje(prioridad)
@@ -309,31 +332,43 @@ class GestorPacientes:
             logger.error(f"Error al registrar paciente de emergencia: {e}")
             return None, 1, "Error en el registro"
     
-    def registrar_paciente_especialidad(self, name, age, gender, especialidad, sintomas):
+    def registrar_paciente_especialidad(self, patient_id, name, apellido, age, gender, especialidad, sintomas):
         
         try:
-            # Paso 1: Generar ID único
-            patient_id = f"ESP_{len(self.patient_list.to_list()) + 1:05d}"
+            # Paso 1: Buscar paciente existente
+            paciente = self.patient_list.search(patient_id)
+            is_new = False
             
-            # Paso 2: Crear paciente
-            paciente = Paciente(patient_id, name, age, gender)
+            if not paciente:
+                is_new = True
+                # Paso 2: Crear paciente
+                paciente = Paciente(patient_id, name, apellido, age, gender)
+                # Añadir a lista de pacientes
+                self.patient_list.append(paciente)
+            else:
+                paciente.name = name
+                paciente.apellido = apellido
+                paciente.age = age
+                paciente.gender = gender
             
-            # Paso 3: Almacenar la especialidad en el paciente
+            # Paso 3: Almacenar la especialidad y condición
             paciente.especialidad = especialidad
-            paciente.sintomas = sintomas
+            paciente.condicion_actual = f"Sala de Espera: {especialidad.value}"
+            paciente.sintomas_actuales = sintomas
+            paciente.enfermedad_principal = f"Consulta de {especialidad.value}"
             
-            # Paso 4: Añadir a lista de pacientes
-            self.patient_list.append(paciente)
-            
-            # Paso 5: Añadir a la cola de espera de la especialidad
+            # Paso 4: Añadir a la cola de espera de la especialidad
             clave_especialidad = especialidad.value.lower().replace(" ", "")
             if clave_especialidad in self.salas_espera:
                 self.salas_espera[clave_especialidad].enqueue(paciente)
             
-            # Paso 6: Guardar cambios
-            self.csv_handler.append_data(paciente.to_dict())
+            # Paso 5: Guardar cambios
+            if is_new:
+                self.csv_handler.append_data(paciente.to_dict())
+            else:
+                self.save_patients()
             
-            # Paso 7: Registrar en logs
+            # Paso 6: Registrar en logs
             logger.info(f"Paciente registrado para {especialidad.value}: {paciente.name}")
             
             return paciente
@@ -405,6 +440,11 @@ class GestorPacientes:
                 patient_id, especialidad, tipo_cita, fecha, hora, notas, prioridad
             )
             
+            # Actualizar la condición actual si la cita se programó exitosamente
+            if cita:
+                paciente.condicion_actual = f"Cita Programada ({especialidad.value})"
+                self.save_patients()
+            
             logger.info(f"Cita programada para {paciente.name}: {mensaje}")
             return cita, mensaje
             
@@ -442,4 +482,86 @@ class GestorPacientes:
             return self.gestor_triaje.obtener_lista_emergencias()
         except Exception as e:
             logger.error(f"Error al obtener lista de emergencias: {e}")
+            return []
+
+    # ==================== NUEVAS FUNCIONES DE BÚSQUEDA Y ORDENAMIENTO ====================
+    
+    def buscar_por_genero(self, genero):
+        try:
+            pacientes = self.patient_list.to_list()
+            resultados = [p for p in pacientes if p.gender.upper() == genero.upper()]
+            logger.debug(f"Búsqueda por género '{genero}': {len(resultados)} encontrados")
+            return resultados
+        except Exception as e:
+            logger.error(f"Error al buscar por género: {e}")
+            return []
+
+    def buscar_por_edad(self, edad):
+        try:
+            pacientes = self.patient_list.to_list()
+            resultados = [p for p in pacientes if str(p.age) == str(edad)]
+            logger.debug(f"Búsqueda por edad '{edad}': {len(resultados)} encontrados")
+            return resultados
+        except Exception as e:
+            logger.error(f"Error al buscar por edad: {e}")
+            return []
+
+    def buscar_por_fecha(self, fecha):
+        try:
+            pacientes = self.patient_list.to_list()
+            resultados = [p for p in pacientes if getattr(p, 'fecha_registro', '') == fecha]
+            logger.debug(f"Búsqueda por fecha '{fecha}': {len(resultados)} encontrados")
+            return resultados
+        except Exception as e:
+            logger.error(f"Error al buscar por fecha: {e}")
+            return []
+
+    def buscar_por_dia(self, dia):
+        try:
+            pacientes = self.patient_list.to_list()
+            resultados = [p for p in pacientes if getattr(p, 'dia_registro', '').upper() == dia.upper()]
+            logger.debug(f"Búsqueda por día '{dia}': {len(resultados)} encontrados")
+            return resultados
+        except Exception as e:
+            logger.error(f"Error al buscar por día: {e}")
+            return []
+
+    def sort_patients_by_gender(self):
+        try:
+            patients = self.patient_list.to_list()
+            patients.sort(key=lambda p: getattr(p, 'gender', ''))
+            logger.debug("Ordenando pacientes por género")
+            return patients
+        except Exception as e:
+            logger.error(f"Error al ordenar pacientes por género: {e}")
+            return []
+
+    def sort_patients_by_date(self):
+        try:
+            patients = self.patient_list.to_list()
+            patients.sort(key=lambda p: getattr(p, 'fecha_registro', ''))
+            logger.debug("Ordenando pacientes por fecha")
+            return patients
+        except Exception as e:
+            logger.error(f"Error al ordenar pacientes por fecha: {e}")
+            return []
+
+    def sort_patients_by_day(self):
+        try:
+            patients = self.patient_list.to_list()
+            patients.sort(key=lambda p: getattr(p, 'dia_registro', ''))
+            logger.debug("Ordenando pacientes por día")
+            return patients
+        except Exception as e:
+            logger.error(f"Error al ordenar pacientes por día: {e}")
+            return []
+
+    def sort_patients_by_disease(self):
+        try:
+            patients = self.patient_list.to_list()
+            patients.sort(key=lambda p: getattr(p, 'enfermedad_principal', ''))
+            logger.debug("Ordenando pacientes por enfermedad")
+            return patients
+        except Exception as e:
+            logger.error(f"Error al ordenar pacientes por enfermedad: {e}")
             return []

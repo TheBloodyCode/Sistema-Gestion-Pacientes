@@ -27,7 +27,7 @@ def mostrar_menu_principal():
     
     print("\n CONSULTAS Y BÚSQUEDA:")
     print("  10.  Ver todos los pacientes")
-    print("  11.  Buscar paciente por ID o nombre")
+    print("  11.  Buscar paciente por CI o nombre")
     print("  12.  Ver lista de pacientes en emergencias")
     
     print("\n HISTORIAL MÉDICO:")
@@ -37,7 +37,11 @@ def mostrar_menu_principal():
     print("\n GESTIÓN DEL SISTEMA:")
     print("  15.  Ordenar pacientes por edad")
     print("  16.  Ordenar pacientes por nombre")
-    print("  17.  Eliminar paciente del sistema")
+    print("  17.  Ordenar pacientes por género")
+    print("  18.  Ordenar pacientes por fecha")
+    print("  19.  Ordenar pacientes por día")
+    print("  20.  Ordenar pacientes por tipo de enfermedad")
+    print("  21.  Eliminar paciente del sistema")
     
     print("\n  0.  Salir del sistema")
     print("="*60)
@@ -81,7 +85,7 @@ def main():
             mostrar_menu_principal()
             
             # Recibir opción
-            opcion = input("\n Seleccione una opción (0-17): ").strip()
+            opcion = input("\n Seleccione una opción (0-21): ").strip()
             
             # Procesar opción elegida
             if opcion == '1':
@@ -94,15 +98,20 @@ def main():
                         print(" La cédula no puede estar vacía.")
                         continue
                     
-                    nombre = input(" Nombre completo del paciente: ").strip()
+                    nombre = input(" Nombre(s) del paciente: ").strip()
                     if not nombre:
                         print(" El nombre no puede estar vacío.")
+                        continue
+                        
+                    apellido = input(" Apellido(s) del paciente: ").strip()
+                    if not apellido:
+                        print(" Los apellidos no pueden estar vacíos.")
                         continue
                     
                     edad = obtener_edad_valida()
                     genero = input(" Género (M/F): ").strip().upper()
                     
-                    paciente = gestor.add_patient(cedula, nombre, edad, genero)
+                    paciente = gestor.add_patient(cedula, nombre, apellido, edad, genero)
                     
                     if paciente:
                         print("\n PACIENTE REGISTRADO EXITOSAMENTE!")
@@ -110,7 +119,7 @@ def main():
                         print(paciente)
                         print("="*60)
                     else:
-                        print(" Error: No se pudo registrar el paciente (posiblemente ID duplicado)")
+                        print(" Error: No se pudo registrar el paciente (posiblemente CI duplicada)")
                         
                 except Exception as e:
                     logger.error(f"Error al registrar paciente general: {e}")
@@ -142,9 +151,14 @@ def main():
                         print(" La cédula no puede estar vacía")
                         continue
                     
-                    nombre = input(" Nombre completo del paciente: ").strip()
+                    nombre = input(" Nombre(s) del paciente: ").strip()
                     if not nombre:
                         print(" El nombre no puede estar vacío")
+                        continue
+                        
+                    apellido = input(" Apellido(s) del paciente: ").strip()
+                    if not apellido:
+                        print(" Los apellidos no pueden estar vacíos")
                         continue
                     
                     edad = obtener_edad_valida()
@@ -159,13 +173,13 @@ def main():
                         sintomas.append(sintoma)
                     
                     paciente = gestor.registrar_paciente_especialidad(
-                        nombre, edad, genero, especialidad, sintomas
+                        cedula, nombre, apellido, edad, genero, especialidad, sintomas
                     )
                     
                     if paciente:
                         print(f"\n PACIENTE REGISTRADO EN {especialidad.value}")
                         print("="*60)
-                        print(f"  ID: {paciente.id}")
+                        print(f"  CI: {paciente.id}")
                         print(f"  Nombre: {paciente.name}")
                         print(f"  Edad: {paciente.age}")
                         print(f"  Especialidad: {especialidad.value}")
@@ -186,11 +200,17 @@ def main():
                     print("\n INFORMACIÓN DEL PACIENTE:")
                     cedula = input(" Número de cédula: ").strip()
                     if not cedula:
-                        cedula = f"EMRG_{hash(input('Nombre: '))}"
+                        print(" La cédula es requerida")
+                        continue
                     
-                    nombre = input(" Nombre del paciente: ").strip()
+                    nombre = input(" Nombre(s) del paciente: ").strip()
                     if not nombre:
                         print(" El nombre es requerido")
+                        continue
+                        
+                    apellido = input(" Apellido(s) del paciente: ").strip()
+                    if not apellido:
+                        print(" Los apellidos son requeridos")
                         continue
                     
                     edad = obtener_edad_valida()
@@ -234,7 +254,7 @@ def main():
                             print(" FC no válida, omitida")
                     
                     paciente, prioridad, descripcion = gestor.registrar_paciente_con_emergencia(
-                        nombre, edad, genero, sintomas,
+                        cedula, nombre, apellido, edad, genero, sintomas,
                         signos_vitales if signos_vitales else None
                     )
                     
@@ -242,7 +262,7 @@ def main():
                         print("\n" + "="*60)
                         print(" PACIENTE REGISTRADO EN EMERGENCIAS")
                         print("="*60)
-                        print(f"\n ID: {paciente.id}")
+                        print(f"\n CI: {paciente.id}")
                         print(f" Nombre: {paciente.name}")
                         print(f" Edad: {paciente.age} años")
                         print(f" Género: {paciente.gender}")
@@ -286,7 +306,7 @@ def main():
                         print(" PACIENTE SIENDO ATENDIDO")
                         print("="*60)
                         print(f"\n Nombre: {paciente.name}")
-                        print(f" ID: {paciente.id}")
+                        print(f" CI: {paciente.id}")
                         print(f" Edad: {paciente.age} años")
                         print(f" Género: {paciente.gender}")
                         
@@ -498,7 +518,7 @@ def main():
                 print(" CITAS DEL PACIENTE")
                 print("="*60)
                 try:
-                    patient_id = input("\n ID del paciente: ").strip()
+                    patient_id = input("\n CI del paciente: ").strip()
                     paciente = gestor.get_patient(patient_id)
                     
                     if not paciente:
@@ -557,9 +577,10 @@ def main():
                     if pacientes:
                         print(f"\n Total de pacientes: {len(pacientes)}\n")
                         for i, paciente in enumerate(pacientes, 1):
-                            print(f"  {i}. {paciente.name}")
+                            print(f"  {i}. {paciente.name} {paciente.apellido}")
                             print(f"     Cédula: {paciente.id}")
                             print(f"     Edad: {paciente.age} años | Género: {paciente.gender}")
+                            print(f"     Condición: {paciente.condicion_actual}")
                             if paciente.medical_history:
                                 print(f"     Registros médicos: {len(paciente.medical_history)}")
                             print()
@@ -572,25 +593,60 @@ def main():
                     
             elif opcion == '11':
                 print("\n" + "="*60)
-                print(" BUSCAR PACIENTE")
+                print(" BUSCAR PACIENTE (AVANZADA)")
                 print("="*60)
                 try:
-                    busqueda = input("\n Ingrese ID o nombre del paciente: ").strip()
+                    print(" Opciones de búsqueda:")
+                    print("  1. Buscar por CI, Nombre o Apellido")
+                    print("  2. Buscar por género (M/F)")
+                    print("  3. Buscar por fecha de registro (YYYY-MM-DD)")
+                    print("  4. Buscar por edad")
+                    print("  5. Buscar por día de la semana (ej. Lunes)")
                     
-                    paciente = gestor.get_patient(busqueda)
+                    sub_opcion = input("\n Seleccione una opción (1-5): ").strip()
+                    pacientes_encontrados = []
                     
-                    if paciente:
-                        print("\n" + "="*60)
-                        print(" PACIENTE ENCONTRADO")
-                        print("="*60)
-                        print(paciente)
-                        print("="*60)
-                        if paciente.medical_history:
-                            print(f"\n Historial médico ({len(paciente.medical_history)} registros):")
-                            for i, registro in enumerate(paciente.medical_history, 1):
-                                print(f"  {i}. {registro}")
+                    if sub_opcion == '1':
+                        busqueda = input("\n Ingrese CI, Nombre o Apellido del paciente: ").strip()
+                        paciente = gestor.get_patient(busqueda)
+                        if paciente:
+                            pacientes_encontrados.append(paciente)
+                    elif sub_opcion == '2':
+                        genero = input("\n Ingrese el género (M/F): ").strip()
+                        pacientes_encontrados = gestor.buscar_por_genero(genero)
+                    elif sub_opcion == '3':
+                        fecha = input("\n Ingrese la fecha (YYYY-MM-DD): ").strip()
+                        pacientes_encontrados = gestor.buscar_por_fecha(fecha)
+                    elif sub_opcion == '4':
+                        edad = obtener_edad_valida()
+                        pacientes_encontrados = gestor.buscar_por_edad(edad)
+                    elif sub_opcion == '5':
+                        dia = input("\n Ingrese el día de la semana: ").strip()
+                        pacientes_encontrados = gestor.buscar_por_dia(dia)
                     else:
-                        print(f"\n Paciente no encontrado")
+                        print(" Opción no válida")
+                        continue
+                    
+                    if pacientes_encontrados:
+                        print(f"\n Se encontraron {len(pacientes_encontrados)} pacientes:")
+                        for p in pacientes_encontrados:
+                            print("\n" + "="*60)
+                            print(p)
+                            
+                            # Mostrar citas agendadas
+                            citas = gestor.obtener_citas_paciente(p.id)
+                            if citas:
+                                print(f"\n 📅 PRÓXIMAS CITAS ({len(citas)} programadas):")
+                                for cita in citas:
+                                    print(f"  - Fecha: {cita.date} | Hora: {cita.time} | Esp: {cita.specialty.value}")
+                                    
+                            if p.medical_history:
+                                print(f"\n 📋 HISTORIAL MÉDICO ({len(p.medical_history)} registros):")
+                                for i, registro in enumerate(p.medical_history, 1):
+                                    print(f"  {i}. {registro}")
+                        print("="*60)
+                    else:
+                        print("\n No se encontraron pacientes con esos criterios.")
                     
                 except Exception as e:
                     logger.error(f"Error al buscar paciente: {e}")
@@ -610,7 +666,7 @@ def main():
                             razon = getattr(paciente, 'emergency_reason', 'N/A')
                             desc = gestor.gestor_triaje.obtener_descripcion_triaje(prioridad)
                             
-                            print(f"  {i}. {paciente.name} | ID: {paciente.id}")
+                            print(f"  {i}. {paciente.name} | CI: {paciente.id}")
                             print(f"     Prioridad: {prioridad} - {desc}")
                             print(f"     Razón: {razon}")
                             print()
@@ -626,7 +682,7 @@ def main():
                 print(" AÑADIR REGISTRO MÉDICO")
                 print("="*60)
                 try:
-                    patient_id = input("\n ID del paciente: ").strip()
+                    patient_id = input("\n CI del paciente: ").strip()
                     
                     paciente = gestor.get_patient(patient_id)
                     if not paciente:
@@ -654,7 +710,7 @@ def main():
                 print(" HISTORIAL MÉDICO DEL PACIENTE")
                 print("="*60)
                 try:
-                    patient_id = input("\n ID del paciente: ").strip()
+                    patient_id = input("\n CI del paciente: ").strip()
                     
                     paciente = gestor.get_patient(patient_id)
                     if not paciente:
@@ -686,7 +742,7 @@ def main():
                     if pacientes:
                         print(f"\n Total: {len(pacientes)} pacientes\n")
                         for i, paciente in enumerate(pacientes, 1):
-                            print(f"  {i}. {paciente.name} - {paciente.age} años (ID: {paciente.id})")
+                            print(f"  {i}. {paciente.name} - {paciente.age} años (CI: {paciente.id})")
                     else:
                         print("\n No hay pacientes")
                     
@@ -704,7 +760,7 @@ def main():
                     if pacientes:
                         print(f"\n Total: {len(pacientes)} pacientes\n")
                         for i, paciente in enumerate(pacientes, 1):
-                            print(f"  {i}. {paciente.name} - {paciente.age} años (ID: {paciente.id})")
+                            print(f"  {i}. {paciente.name} - {paciente.age} años (CI: {paciente.id})")
                     else:
                         print("\n No hay pacientes")
                     
@@ -714,10 +770,74 @@ def main():
                     
             elif opcion == '17':
                 print("\n" + "="*60)
+                print(" PACIENTES ORDENADOS POR GÉNERO")
+                print("="*60)
+                try:
+                    pacientes = gestor.sort_patients_by_gender()
+                    if pacientes:
+                        print(f"\n Total: {len(pacientes)} pacientes\n")
+                        for i, p in enumerate(pacientes, 1):
+                            print(f"  {i}. {p.name} - {getattr(p, 'gender', 'N/A')} (CI: {p.id})")
+                    else:
+                        print("\n No hay pacientes")
+                except Exception as e:
+                    logger.error(f"Error al ordenar por género: {e}")
+                    print(f" Error inesperado: {e}")
+
+            elif opcion == '18':
+                print("\n" + "="*60)
+                print(" PACIENTES ORDENADOS POR FECHA")
+                print("="*60)
+                try:
+                    pacientes = gestor.sort_patients_by_date()
+                    if pacientes:
+                        print(f"\n Total: {len(pacientes)} pacientes\n")
+                        for i, p in enumerate(pacientes, 1):
+                            print(f"  {i}. {p.name} - {getattr(p, 'fecha_registro', 'N/A')} (CI: {p.id})")
+                    else:
+                        print("\n No hay pacientes")
+                except Exception as e:
+                    logger.error(f"Error al ordenar por fecha: {e}")
+                    print(f" Error inesperado: {e}")
+
+            elif opcion == '19':
+                print("\n" + "="*60)
+                print(" PACIENTES ORDENADOS POR DÍA")
+                print("="*60)
+                try:
+                    pacientes = gestor.sort_patients_by_day()
+                    if pacientes:
+                        print(f"\n Total: {len(pacientes)} pacientes\n")
+                        for i, p in enumerate(pacientes, 1):
+                            print(f"  {i}. {p.name} - {getattr(p, 'dia_registro', 'N/A')} (CI: {p.id})")
+                    else:
+                        print("\n No hay pacientes")
+                except Exception as e:
+                    logger.error(f"Error al ordenar por día: {e}")
+                    print(f" Error inesperado: {e}")
+
+            elif opcion == '20':
+                print("\n" + "="*60)
+                print(" PACIENTES ORDENADOS POR ENFERMEDAD")
+                print("="*60)
+                try:
+                    pacientes = gestor.sort_patients_by_disease()
+                    if pacientes:
+                        print(f"\n Total: {len(pacientes)} pacientes\n")
+                        for i, p in enumerate(pacientes, 1):
+                            print(f"  {i}. {p.name} - {getattr(p, 'enfermedad_principal', 'N/A')} (CI: {p.id})")
+                    else:
+                        print("\n No hay pacientes")
+                except Exception as e:
+                    logger.error(f"Error al ordenar por enfermedad: {e}")
+                    print(f" Error inesperado: {e}")
+
+            elif opcion == '21':
+                print("\n" + "="*60)
                 print(" ELIMINAR PACIENTE")
                 print("="*60)
                 try:
-                    patient_id = input("\n ID del paciente a eliminar: ").strip()
+                    patient_id = input("\n CI del paciente a eliminar: ").strip()
                     
                     paciente = gestor.get_patient(patient_id)
                     if not paciente:

@@ -60,6 +60,15 @@ class ManejadorCSV:
                     else:
                         # Si no hay historial o está vacío, inicializamos como lista vacía
                         row['medical_history'] = []
+                    
+                    if 'sintomas_actuales' in row and row['sintomas_actuales']:
+                        try:
+                            row['sintomas_actuales'] = ast.literal_eval(row['sintomas_actuales'])
+                        except (ValueError, SyntaxError):
+                            row['sintomas_actuales'] = []
+                    elif 'sintomas_actuales' not in row:
+                        row['sintomas_actuales'] = []
+
                     # Añadimos la fila (paciente) a la lista de datos
                     data.append(row)
             # Registramos en los logs cuántos registros leímos
@@ -99,6 +108,8 @@ class ManejadorCSV:
                     # Convertimos el historial médico de lista a cadena (si existe)
                     if 'medical_history' in row_copy:
                         row_copy['medical_history'] = str(row_copy['medical_history'])
+                    if 'sintomas_actuales' in row_copy:
+                        row_copy['sintomas_actuales'] = str(row_copy['sintomas_actuales'])
                     # Escribimos la fila en el archivo
                     writer.writerow(row_copy)
             # Registramos en los logs cuántos registros guardamos
@@ -112,8 +123,8 @@ class ManejadorCSV:
         
         try:
             file_exists = os.path.exists(self.filepath)
-            # Aseguramos el orden exacto de las columnas
-            headers = ["id", "name", "age", "gender", "medical_history"]
+            # Aseguramos el orden exacto de las columnas usando las claves del dict
+            headers = list(row.keys())
             
             with open(self.filepath, mode='a', newline='', encoding='utf-8') as file:
                 writer = csv.DictWriter(file, fieldnames=headers, extrasaction='ignore')
@@ -124,6 +135,8 @@ class ManejadorCSV:
                 row_copy = row.copy()
                 if 'medical_history' in row_copy:
                     row_copy['medical_history'] = str(row_copy['medical_history'])
+                if 'sintomas_actuales' in row_copy:
+                    row_copy['sintomas_actuales'] = str(row_copy['sintomas_actuales'])
                 
                 writer.writerow(row_copy)
             logger.info(f"Registro añadido a {self.filepath}")

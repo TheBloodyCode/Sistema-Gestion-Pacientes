@@ -5,7 +5,7 @@ from models.especialidad import EspecialidadMedica, TipoCita
 class CitaMedica:
 
     def __init__(self, patient_id, specialty, appointment_type, 
-                 date, time, notes="", priority=3):
+                 date, time, notes="", priority=3, dia_atencion=None):
         
         # Paso 1: Generar un ID único para la cita
         # uuid.uuid4() genera un identificador universal único
@@ -28,6 +28,12 @@ class CitaMedica:
         # Paso 6: Almacenar la hora de la cita
         self.time = time
         
+        # --- NUEVO CAMPO: día de atención ---
+        if dia_atencion is None:
+            self.dia_atencion = self._calcular_dia(self.date)
+        else:
+            self.dia_atencion = dia_atencion
+            
         # Paso 7: Almacenar notas adicionales si las hay
         self.notes = notes
         
@@ -46,6 +52,15 @@ class CitaMedica:
         # Paso 10: Registrar la fecha y hora exacta de creación de la cita
         # isoformat() devuelve formato: 2024-12-25T10:30:45.123456
         self.created_at = datetime.now().isoformat()
+        
+    def _calcular_dia(self, fecha_str):
+        # Método auxiliar para calcular el día de la semana a partir de la fecha
+        try:
+            dt = datetime.strptime(fecha_str, "%Y-%m-%d")
+            dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+            return dias[dt.weekday()]
+        except:
+            return "Desconocido"
     
     def to_dict(self):
         
@@ -61,6 +76,7 @@ class CitaMedica:
             'appointment_type': self.appointment_type.value if isinstance(self.appointment_type, TipoCita) else self.appointment_type,
             'date': self.date,
             'time': self.time,
+            'dia_atencion': self.dia_atencion,
             'notes': self.notes,
             'priority': self.priority,
             'status': self.status,
@@ -82,7 +98,8 @@ class CitaMedica:
             date=data['date'],
             time=data['time'],
             notes=data.get('notes', ''),  # get() para evitar error si no existe
-            priority=data.get('priority', 3)  # get() con valor por defecto
+            priority=data.get('priority', 3),  # get() con valor por defecto
+            dia_atencion=data.get('dia_atencion')
         )
         
         # Paso 2: Restaurar atributos adicionales si existen

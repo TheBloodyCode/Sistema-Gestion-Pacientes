@@ -1,3 +1,2 @@
-id,name,age,gender,medical_history
-0940974553,Juan Manuel Molina Sarco,35,Masculino,[]
-0940510829,Derian Alcivar,28,MASCULINO,[]
+id,name,apellido,age,gender,medical_history,fecha_registro,dia_registro,enfermedad_principal,condicion_actual,sintomas_actuales
+0940974553,Juan Manuel,Molina Sarco,35,M,[],2026-07-11,Sábado,Consulta de Medicina General,Sala de Espera: Medicina General,"['Fiebre Alta', 'Dolor De Cabeza', 'Devilida', 'Anemia']"

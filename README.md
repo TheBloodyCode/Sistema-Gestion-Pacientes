@@ -64,10 +64,11 @@ SISTEMA DE GESTIÓN DE PACIENTES/
 ```
 
 ### Gestión de Pacientes
--  **Registro de Pacientes**: Añade, busca y elimina pacientes con información completa
--  **Múltiples Opciones de Registro**: Registro general, por especialidad, o como emergencia
--  **Historial Médico**: Registra y consulta el historial médico de cada paciente
--  **Ordenamiento**: Ordena pacientes por edad o nombre alfabéticamente
+-  **Registro de Pacientes**: Añade, busca y elimina pacientes con información completa separando **Nombre** y **Apellido**.
+-  **Manejo de Duplicados**: Prevención de duplicados por Cédula (CI). Si se registra una CI existente, se actualizan los datos.
+-  **Múltiples Opciones de Registro**: Registro general, por especialidad, o como emergencia.
+-  **Historial Médico**: Registra y consulta el historial médico de cada paciente.
+-  **Ordenamiento**: Ordena pacientes por edad o alfabéticamente (priorizando **Apellido** y luego **Nombre**).
 
 ###  Sistema de Triaje de Emergencias
 - **Evaluación Automática de Urgencia**: Algoritmo inteligente con 5 niveles de prioridad (1-5)
@@ -197,7 +198,7 @@ Sigue estos pasos para configurar y ejecutar el proyecto:
 1. ** Registrar nuevo paciente (consulta general)**
    - Crea un paciente con datos básicos (cédula, nombre, edad, género)
    - Se añade automáticamente a la lista de pacientes
-   - Genera ID único en el sistema
+   - Genera CI única en el sistema
 
 2. ** Registrar paciente por especialidad**
    - Registra un paciente indicando la especialidad que requiere
@@ -260,11 +261,13 @@ Sigue estos pasos para configurar y ejecutar el proyecto:
     - Cantidad de registros médicos por paciente
     - Formato tabla clara y legible
 
-11. ** Buscar paciente por ID o nombre**
-    - Búsqueda flexible por cédula o nombre completo
-    - Muestra información detallada del paciente encontrado
-    - Historial médico completo
-    - Información de emergencias si aplica
+11. ** Búsqueda Avanzada de Pacientes**
+    - Menú interactivo con 5 sub-opciones
+    - Búsqueda por CI, Nombre o **Apellido** (permite búsqueda concatenada Nombre Apellido)
+    - Filtrado por Género (Masculino/Femenino)
+    - Búsqueda por Fecha de Registro exacta
+    - Filtrado de pacientes por Edad
+    - Búsqueda por Día de Atención (ej. Lunes, Martes)
 
 12. ** Ver lista de pacientes en emergencias**
     - Lista de todos los pacientes en estado de emergencia
@@ -284,18 +287,30 @@ Sigue estos pasos para configurar y ejecutar el proyecto:
     - Muestra cronológicamente
     - Información completa de cada anotación
 
-###  GESTIÓN DEL SISTEMA (Opciones 15-17)
+###  GESTIÓN DEL SISTEMA (Opciones 15-21)
 15. ** Ordenar pacientes por edad**
     - Lista de pacientes ordenada de menor a mayor edad
     - Útil para análisis demográfico
     - Visualización clara por número
 
-16. ** Ordenar pacientes por nombre**
+16. ** Ordenar pacientes por nombre (alfabético)**
     - Lista de pacientes en orden alfabético
-    - Facilita búsqueda manual
-    - Información de edad incluida
+    - Organiza primero por **Apellido** y luego por **Nombre**
+    - Facilita búsqueda manual rápida
 
-17. ** Eliminar paciente del sistema**
+17. ** Ordenar pacientes por género**
+    - Agrupación alfabética por género
+
+18. ** Ordenar pacientes por fecha**
+    - Ordenamiento cronológico por fecha de registro en el sistema
+
+19. ** Ordenar pacientes por día**
+    - Agrupación por día de la semana (Lunes, Martes, etc.)
+
+20. ** Ordenar pacientes por tipo de enfermedad**
+    - Ordenamiento basado en la especialidad solicitada o condición principal
+
+21. ** Eliminar paciente del sistema**
     - Elimina permanentemente un paciente
     - Requiere confirmación (protección contra errores)
     - Se elimina de todas las listas (general, emergencias, citas)
@@ -436,7 +451,7 @@ Acción: Paciente encolado en emergencias, registrado en logs
 ### 2. Programar una Cita
 ```
 Usuario: Opción 6 (AGENDAR CITA)
-Entrada: Paciente ID, Especialidad (Cardiología), Fecha, Hora
+Entrada: Paciente CI, Especialidad (Cardiología), Fecha, Hora
 Sistema: Verifica disponibilidad
          - Cardiología: 9:00-17:00, 50 min/cita
          - 2026-06-20 10:00 está libre
